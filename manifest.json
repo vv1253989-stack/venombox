@@ -1,0 +1,28 @@
+{
+  "id": "./",
+  "name": "White Devil",
+  "short_name": "White Devil",
+  "description": "Biology practice quiz app",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1a14",
+  "theme_color": "#000000",
+  "lang": "hi",
+  "categories": ["education"],
+  "icons": [
+    {
+      "src": "icon-192-1.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-1.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
