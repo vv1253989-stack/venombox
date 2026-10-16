@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YouTube Playlist Helper</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;padding:16px;background:#0f1a14;color:#eaf2ee;max-width:640px;margin:auto}
+h2{margin:6px 0 4px}p{color:#9db3a7;margin:4px 0 10px;font-size:14px}
+input,button,textarea{font:inherit;width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #2f4a3a;background:#16241c;color:#fff;margin:6px 0}
+button{background:#1f9d55;border:0;font-weight:700;cursor:pointer}button:disabled{opacity:.6}
+textarea{font-size:12px;line-height:1.5;min-height:260px}
+#st{font-size:14px;color:#f5b82e;min-height:20px}
+#pl{position:absolute;left:-9999px;top:0;width:320px;height:180px}
+</style></head><body>
+<h2>▶ YouTube Playlist Helper</h2>
+<p>Playlist ka link paste karo. Ye us playlist ke saare videos ki list (order, ID aur naam) nikal dega. Phir <b>Copy list</b> dabake chat me paste kar do.</p>
+<input id="u" placeholder="https://youtube.com/playlist?list=PL...">
+<button id="go">Videos ki list nikalo</button>
+<div id="st"></div>
+<textarea id="out" readonly placeholder="Yahan list aayegi..."></textarea>
+<button id="cp">📋 Copy list</button>
+<div id="pl"></div>
+<script>
+var apiReady=false,player=null;
+window.onYouTubeIframeAPIReady=function(){apiReady=true};
+var tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';document.head.appendChild(tag);
+function $(i){return document.getElementById(i)}
+function st(t){$('st').textContent=t}
+function listId(v){var m=/[?&]list=([A-Za-z0-9_-]+)/.exec(v);if(m)return m[1];v=v.trim();return /^[A-Za-z0-9_-]{10,}$/.test(v)?v:''}
+async function title(id){
+  var u='https://www.youtube.com/watch?v='+id,eu=encodeURIComponent(u);
+  var tries=['https://www.youtube.com/oembed?format=json&url='+eu,'https://noembed.com/embed?url='+eu];
+  for(var i=0;i<tries.length;i++){
+    try{var r=await fetch(tries[i]);if(!r.ok)continue;var j=await r.json();if(j&&j.title)return j.title+' | '+(j.author_name||'')}catch(e){}
+  }
+  return '(naam nahi mila)';
+}
+$('go').onclick=function(){
+  var id=listId($('u').value);
+  if(!id){st('Playlist ka sahi link daalo.');return}
+  if(!apiReady){st('YouTube load ho raha hai, 2 second baad dobara dabao.');return}
+  $('out').value='';st('Playlist load ho rahi hai...');$('go').disabled=true;
+  $('pl').innerHTML='<div id="pp"></div>';
+  player=new YT.Player('pp',{height:'180',width:'320',playerVars:{listType:'playlist',list:id,playsinline:1},
+    events:{onReady:function(){poll(id,0)},onError:function(){st('Playlist nahi khuli. Check karo ki public hai.');$('go').disabled=false}}});
+};
+function poll(id,n){
+  var a=null;try{a=player.getPlaylist()}catch(e){}
+  if(a&&a.length){fill(a)}
+  else if(n<25){setTimeout(function(){poll(id,n+1)},600)}
+  else{st('Videos ki list nahi mili. Dobara try karo.');$('go').disabled=false}
+}
+async function fill(ids){
+  st(ids.length+' videos mile. Naam la raha hu...');
+  var lines=new Array(ids.length);
+  for(var i=0;i<ids.length;i++){
+    lines[i]=(i+1)+'. '+ids[i]+' | '+await title(ids[i]);
+    $('out').value=lines.filter(Boolean).join('\n');
+  }
+  st('Ho gaya: '+ids.length+' videos. Ab Copy list dabao.');$('go').disabled=false;
+}
+$('cp').onclick=function(){
+  var t=$('out').value;if(!t){st('Pehle list nikalo.');return}
+  if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){st('Copy ho gaya ✅ Ab chat me paste karo.')},function(){$('out').select();st('Text select ho gaya, copy kar lo.')})}
+  else{$('out').select();document.execCommand('copy');st('Copy ho gaya ✅')}
+};
+</script></body></html>
